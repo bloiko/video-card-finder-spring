@@ -1,6 +1,7 @@
 package com.example.services.parser;
 
 import com.example.entities.VideoCard;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 @Service
+@Slf4j
 public class VideoCardParser {
         public static final int NUM_OF_PAGES = 18;
     private static final BigDecimal DEFAULT = new BigDecimal(200);
@@ -25,9 +27,7 @@ public class VideoCardParser {
     public  List<VideoCard> getVideoCards() {
             List<String> hrefs = getVideoCardHrefs();
             List<VideoCard> videoCards = new ArrayList<>();
-            int counter = 0;
             for (String href : hrefs) {
-                ((Runnable) () -> {
                     try {
                         VideoCard videoCard = new VideoCard();
                         videoCard.setHref("https://hotline.ua" + href);
@@ -38,13 +38,11 @@ public class VideoCardParser {
                         System.out.println(videoCard.getName()+" "+videoCard.getHashRate()+" "+videoCard.getPower()+" --> "+videoCard.getDailyProfit());
                         videoCards.add(videoCard);
                     } catch (Exception e) {
-                        System.out.println("Cannot parse "+href);
+                        log.error("Cannot parse "+href);
                     }
-                }).run();
-
-                if(counter== NUM_OF_VIDEOCARDS){
+                if(videoCards.size()== NUM_OF_VIDEOCARDS){
                     break;
-                }else counter++;
+                }
             }
             return videoCards;
         }
