@@ -1,18 +1,22 @@
 package com.example.services.parser;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 
 @Service
+@Slf4j
 public class CurrencyParser {
+
+    public static final String HTTPS_COINMARKETCAP_COM_CURRENCIES_ETHEREUM = "https://coinmarketcap.com/currencies/ethereum/";
+
     public BigDecimal getEthereumPrice() {
-        return parsePageWithPrice("https://coinmarketcap.com/currencies/ethereum/");
+        return parsePageWithPrice(HTTPS_COINMARKETCAP_COM_CURRENCIES_ETHEREUM);
     }
 
     private BigDecimal parsePageWithPrice(String url) {
@@ -27,13 +31,14 @@ public class CurrencyParser {
             connection.header("headersecurity", "xyz123");
             docCustomCon = connection.get();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Cannot get connetion to the "+url,e);
         }
         if (docCustomCon == null) {
-            System.out.println("Cannot find document in the connection");
+            log.error("Cannot find document in the connection");
+        }else {
+            Elements elements = docCustomCon.getElementsByClass("priceValue___11gHJ");
+            return new BigDecimal(elements.first().text().replace("$", "").replace(",", ""));
         }
-        Elements elements = docCustomCon.getElementsByClass("priceValue___11gHJ");
-        BigDecimal bigDecimal = new BigDecimal(elements.first().text().replace("$", "").replace(",", ""));
-        return bigDecimal;
+        return new BigDecimal(0);
     }
 }

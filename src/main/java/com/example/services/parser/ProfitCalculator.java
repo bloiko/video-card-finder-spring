@@ -10,10 +10,8 @@ import java.math.RoundingMode;
 import java.util.List;
 @Service
 public class ProfitCalculator {
-    private static final BigDecimal PRICE_PER_KILOWATT=new BigDecimal(0.061);
+    private static final BigDecimal PRICE_PER_KILOWATT=new BigDecimal("0.061");
     private static final BigDecimal ETHEREUMS_PER_BLOCK=new BigDecimal(20350);
-    private static final  BigDecimal BLOCKS_PER_DAY=new BigDecimal(144);
-    public static final int ONE_DOLLAR_IN_UAH = 28;
     private  BigDecimal ethereumCurrency;
     @Autowired
     private CurrencyParser currencyParser;

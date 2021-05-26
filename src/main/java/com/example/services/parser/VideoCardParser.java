@@ -14,101 +14,40 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+
 @Service
 @Slf4j
 public class VideoCardParser {
-        public static final int NUM_OF_PAGES = 18;
+    public static final int NUM_OF_PAGES = 18;
     private static final BigDecimal DEFAULT = new BigDecimal(200);
-    public static final int NUM_OF_VIDEOCARDS = 5;
+    public static final int NUM_OF_VIDEOCARDS = 10;
     @Autowired
     private CardHashRateParser cardHashRateParser;
 
-    public  List<VideoCard> getVideoCards() {
-            List<String> hrefs = getVideoCardHrefs();
-            List<VideoCard> videoCards = new ArrayList<>();
-            for (String href : hrefs) {
-                    try {
-                        VideoCard videoCard = new VideoCard();
-                        videoCard.setHref("https://hotline.ua" + href);
-                        videoCard.setName(getNameFromPage("https://hotline.ua" + href + "?tab=about"));
-                        videoCard.setHashRate(cardHashRateParser.getNetworkHashRate(videoCard.getName(), "https://2cryptocalc.com/most-profitable-gpu"));
-                        videoCard.setPower(getPowerFromPage("https://hotline.ua" + href + "?tab=about"));
-                        videoCard.setPrice(getPriceFromPage("https://hotline.ua" + href));
-                        System.out.println(videoCard.getName()+" "+videoCard.getHashRate()+" "+videoCard.getPower()+" --> "+videoCard.getDailyProfit());
-                        videoCards.add(videoCard);
-                    } catch (Exception e) {
-                        log.error("Cannot parse "+href);
-                    }
-                if(videoCards.size()== NUM_OF_VIDEOCARDS){
-                    break;
-                }
-            }
-            return videoCards;
-        }
-
-        public  String getNameFromPage(String url) {
-            Document docCustomCon = null;
+    public List<VideoCard> getVideoCards() {
+        List<String> hrefs = getVideoCardHrefs();
+        List<VideoCard> videoCards = new ArrayList<>();
+        for (String href : hrefs) {
             try {
-                Connection connection = Jsoup.connect(url);
-                connection.userAgent("Mozilla");
-                connection.timeout(5000);
-                connection.cookie("cookiename", "val234");
-                connection.cookie("cookiename", "val234");
-                connection.referrer("http://google.com");
-                connection.header("headersecurity", "xyz123");
-                if (connection!=null) {
-                    docCustomCon = connection.get();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+                VideoCard videoCard = new VideoCard();
+                videoCard.setHref("https://hotline.ua" + href);
+                videoCard.setName(getNameFromPage("https://hotline.ua" + href + "?tab=about"));
+                videoCard.setHashRate(cardHashRateParser.getNetworkHashRate(videoCard.getName(), "https://2cryptocalc.com/most-profitable-gpu"));
+                videoCard.setPower(getPowerFromPage("https://hotline.ua" + href + "?tab=about"));
+                videoCard.setPrice(getPriceFromPage("https://hotline.ua" + href));
+                log.info("Video card --> "+videoCard.getName() + " " + videoCard.getHashRate() + " " + videoCard.getPower() );
+                videoCards.add(videoCard);
+            } catch (Exception e) {
+                log.error("Cannot parse " + href);
             }
-            if (docCustomCon == null) {
-                new NoSuchElementException().printStackTrace();
-                System.out.println("Cannot find document in the connection "+url);
+            if (videoCards.size() == NUM_OF_VIDEOCARDS) {
+                break;
             }
-            Elements elements = docCustomCon.getElementsByTag("td");
-
-            for (Element element : elements) {
-                String text = element.text();
-                if (text.equals("GPU:")) {
-                    Element element2 = element.parent().children().last().children().last();
-                    return element2.text();
-                }
-            }
-
-            Element element = docCustomCon.getElementsByAttributeValue("data-tracking-id", "product-106").parents().first();
-            if (element != null) {
-                return element.text();
-            } else return null;
         }
+        return videoCards;
+    }
 
-        public  BigDecimal getPriceFromPage(String url) {
-            Document docCustomCon = null;
-            try {
-                Connection connection = Jsoup.connect(url);
-                connection.userAgent("Mozilla");
-                connection.timeout(5000);
-                connection.cookie("cookiename", "val234");
-                connection.cookie("cookiename", "val234");
-                connection.referrer("http://google.com");
-                connection.header("headersecurity", "xyz123");
-                if (connection!=null) {
-                    docCustomCon = connection.get();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (docCustomCon == null) {
-                new NoSuchElementException().printStackTrace();
-                System.out.println("Cannot find document in the connection "+url);
-            }
-            Element element = docCustomCon.getElementsByClass("price__value").first();
-            if(element!=null) {
-                return new BigDecimal( element.text().replace(String.valueOf((char) 160), ""));
-            }else return new BigDecimal(0);
-        }
-    public  BigDecimal getPowerFromPage(String url) {
+    public String getNameFromPage(String url) {
         Document docCustomCon = null;
         try {
             Connection connection = Jsoup.connect(url);
@@ -118,15 +57,68 @@ public class VideoCardParser {
             connection.cookie("cookiename", "val234");
             connection.referrer("http://google.com");
             connection.header("headersecurity", "xyz123");
-            if (connection!=null) {
-                docCustomCon = connection.get();
-            }
+            docCustomCon = connection.get();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Cannot get connetion to the " + url, e);
         }
         if (docCustomCon == null) {
-            new NoSuchElementException().printStackTrace();
-            System.out.println("Cannot find document in the connection "+url);
+            log.error("Cannot find document in the connection " + url);
+        }
+        Elements elements = docCustomCon.getElementsByTag("td");
+
+        for (Element element : elements) {
+            String text = element.text();
+            if (text.equals("GPU:")) {
+                Element element2 = element.parent().children().last().children().last();
+                return element2.text();
+            }
+        }
+
+        Element element = docCustomCon.getElementsByAttributeValue("data-tracking-id", "product-106").parents().first();
+        if (element != null) {
+            return element.text();
+        } else return null;
+    }
+
+    public BigDecimal getPriceFromPage(String url) {
+        Document docCustomCon = null;
+        try {
+            Connection connection = Jsoup.connect(url);
+            connection.userAgent("Mozilla");
+            connection.timeout(5000);
+            connection.cookie("cookiename", "val234");
+            connection.cookie("cookiename", "val234");
+            connection.referrer("http://google.com");
+            connection.header("headersecurity", "xyz123");
+            docCustomCon = connection.get();
+        } catch (IOException e) {
+            log.error("Cannot get connetion to the " + url, e);
+        }
+        if (docCustomCon == null) {
+            log.error("Cannot find document in the connection " + url);
+        }
+        Element element = docCustomCon.getElementsByClass("price__value").first();
+        if (element != null) {
+            return new BigDecimal(element.text().replace(String.valueOf((char) 160), ""));
+        } else return new BigDecimal(0);
+    }
+
+    public BigDecimal getPowerFromPage(String url) {
+        Document docCustomCon = null;
+        try {
+            Connection connection = Jsoup.connect(url);
+            connection.userAgent("Mozilla");
+            connection.timeout(5000);
+            connection.cookie("cookiename", "val234");
+            connection.cookie("cookiename", "val234");
+            connection.referrer("http://google.com");
+            connection.header("headersecurity", "xyz123");
+            docCustomCon = connection.get();
+        } catch (IOException e) {
+            log.error("Cannot get connetion to the " + url, e);
+        }
+        if (docCustomCon == null) {
+            log.error("Cannot find document in the connection "+url);
         }
         Elements elements = docCustomCon.getElementsByTag("td");
 
@@ -145,37 +137,37 @@ public class VideoCardParser {
         return DEFAULT;
     }
 
-        private  List<String> getVideoCardHrefs() {
-            List<String> hrefs = new ArrayList<>();
-            for (int i = 0; i < NUM_OF_PAGES; i++) {
-                String url;
-                if (i == 0) {
-                    url = "https://hotline.ua/computer/videokarty/";
-                } else {
-                    url = "https://hotline.ua/computer/videokarty/?p=" + i;
-                }
-                hrefs.addAll(getHrefsFromOnePage(url));
+    private List<String> getVideoCardHrefs() {
+        List<String> hrefs = new ArrayList<>();
+        for (int i = 0; i < NUM_OF_PAGES; i++) {
+            String url;
+            if (i == 0) {
+                url = "https://hotline.ua/computer/videokarty/";
+            } else {
+                url = "https://hotline.ua/computer/videokarty/?p=" + i;
             }
-            return hrefs;
+            hrefs.addAll(getHrefsFromOnePage(url));
         }
+        return hrefs;
+    }
 
-        private  List<String> getHrefsFromOnePage(String blogUrl) {
-            List<String> hrefs = new ArrayList<>();
-            Document docCustomCon = null;
-            try {
-                Connection connection = Jsoup.connect(blogUrl);
+    private List<String> getHrefsFromOnePage(String url) {
+        List<String> hrefs = new ArrayList<>();
+        Document docCustomCon = null;
+        try {
+            Connection connection = Jsoup.connect(url);
 
-                docCustomCon = connection.get();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (docCustomCon == null) {
-                throw new NoSuchElementException("Cannot find document in the connection");
-            }
-            Elements sections = docCustomCon.getElementsByAttributeValue("data-tracking-id", "catalog-10");
-            sections.forEach(el -> hrefs.add(el.attr("href")));
-            return hrefs;
+            docCustomCon = connection.get();
+        } catch (IOException e) {
+            log.error("Cannot get connetion to the " + url, e);
         }
+        if (docCustomCon == null) {
+            log.error("Cannot find document in the connection "+url);
+        }
+        Elements sections = docCustomCon.getElementsByAttributeValue("data-tracking-id", "catalog-10");
+        sections.forEach(el -> hrefs.add(el.attr("href")));
+        return hrefs;
+    }
 
 
 }
