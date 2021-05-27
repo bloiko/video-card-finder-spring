@@ -1,6 +1,7 @@
 package com.example.services.parser;
 
 import com.example.entities.VideoCard;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +10,7 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.List;
 @Service
+@Slf4j
 public class ProfitCalculator {
     private static final BigDecimal PRICE_PER_KILOWATT=new BigDecimal("0.061");
     private static final BigDecimal ETHEREUMS_PER_BLOCK=new BigDecimal(20350);
@@ -19,10 +21,12 @@ public class ProfitCalculator {
     private NetworkHashRateParser networkHashRateParser;
 
     public List<VideoCard> getAllProfits(List<VideoCard> videoCards){
+        log.info("Profit calculator started");
         ethereumCurrency = currencyParser.getEthereumPrice();
         for (VideoCard videoCard: videoCards){
             videoCard.setDailyProfit(getDailyProfit(videoCard));
         }
+        log.info("Profit calculator finished");
         return  videoCards;
     }
     public BigDecimal getDailyProfit(VideoCard videoCard){

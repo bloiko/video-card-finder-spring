@@ -20,7 +20,7 @@ import java.util.List;
 public class VideoCardParser {
     public static final int NUM_OF_PAGES = 18;
     private static final BigDecimal DEFAULT = new BigDecimal(200);
-    public static final int NUM_OF_VIDEOCARDS = 10;
+    public static final int NUM_OF_VIDEOCARDS = 20;
     @Autowired
     private CardHashRateParser cardHashRateParser;
 
